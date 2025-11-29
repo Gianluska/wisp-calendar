@@ -1,270 +1,163 @@
-# AUR Package Boilerplate
+# Wisp Calendar 🌙
 
-A complete boilerplate for creating Arch User Repository (AUR) packages.
+A **beautiful text-based calendar** with stunning visual aesthetics, designed for Arch Linux and Omarchy OS.
 
-## Quick Start
+```
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                     November 2025                            ║
+    ║──────────────────────────────────────────────────────────────║
+    ║  Mon     Tue     Wed     Thu     Fri     Sat     Sun         ║
+    ║──────────────────────────────────────────────────────────────║
+    ║                                        1       2             ║
+    ║   3       4       5       6       7       8       9          ║
+    ║  10      11      12      13      14      15      16          ║
+    ║  17      18      19      20      21      22      23          ║
+    ║  24      25      26      27      28     [29]     30          ║
+    ╚══════════════════════════════════════════════════════════════╝
+```
 
-1. Clone or copy this boilerplate
-2. Customize the `PKGBUILD` file with your package details
-3. Optionally customize the `.install` script
-4. Generate `.SRCINFO` file
-5. Test locally
-6. Submit to AUR
+## ✨ Features
 
-## Files Included
+- 🎨 **Gorgeous cyberpunk aesthetic** with vibrant colors (lavender, purple, pink)
+- 📅 **Month view** showing entire month at a glance (one week per row)
+- ⌨️  **Intuitive navigation** with arrow keys or vim-style hjkl
+- 🎯 **Visual highlights** for today and selected day
+- 🌈 **Weekend highlighting** for easy week planning
+- 📦 **Lightweight** - pure bash, no heavy dependencies
+
+## AUR Package
+
+This repository contains the AUR package for Wisp Calendar.
+
+## Installation from AUR
+
+```bash
+yay -S wisp-calendar
+# or
+paru -S wisp-calendar
+```
+
+## 🎮 Controls
+
+- **Arrow Keys** or **hjkl** - Navigate through days
+- **t** - Jump to today
+- **q** - Quit
+
+## 🏗️ Building from Source
+
+1. Clone this repository
+2. Build with `makepkg -si`
+3. Run with `wisp-calendar`
+
+## Development
+
+To build and test the package locally:
+
+```bash
+makepkg -si
+```
+
+## Project Structure
 
 ### PKGBUILD
-The main build script that defines how to build and install your package. This file includes:
-- Comprehensive metadata fields (name, version, description, etc.)
-- Examples for common build systems (Make, CMake, Meson, Python, Rust, Go, Node.js)
-- Well-commented sections for easy customization
+The main build script for the AUR package. Defines how to build and install wisp-calendar.
 
-### package-name.install
-Optional install script for pre/post install/upgrade/remove hooks. Useful for:
-- Updating system caches
-- Enabling systemd services
-- Setting permissions
-- Displaying important messages to users
-
-### .gitignore
-Ignores common build artifacts and temporary files:
-- Downloaded source archives
-- Extracted source directories
-- Built packages
-- makepkg temporary files
+### wisp-calendar.install
+Install script with post-install and post-remove hooks.
 
 ### update-srcinfo.sh
-Helper script to generate `.SRCINFO` file from PKGBUILD
+Helper script to generate `.SRCINFO` file from PKGBUILD.
 
-## Customization Guide
+### test-build.sh
+Script to test the package build locally.
 
-### 1. Update PKGBUILD Metadata
+## Contributing
 
-```bash
-pkgname=your-package-name       # Package name (lowercase, no spaces)
-pkgver=1.0.0                    # Version number
-pkgrel=1                        # Package release number (increment for PKGBUILD changes)
-pkgdesc="Description here"      # Short description
-arch=('x86_64')                 # Supported architectures
-url="https://..."               # Project URL
-license=('MIT')                 # License(s)
-```
+Contributions are welcome! Feel free to submit issues and pull requests.
 
-### 2. Configure Dependencies
+## Updating the Package
 
-```bash
-depends=('dep1' 'dep2')         # Runtime dependencies
-makedepends=('build-tool')      # Build-time dependencies
-optdepends=(                    # Optional dependencies
-    'tool: for feature X'
-)
-```
+When updating wisp-calendar:
 
-### 3. Set Up Sources
+1. Update `pkgver` in PKGBUILD
+2. Update checksums if needed: `makepkg -g`
+3. Generate new `.SRCINFO`: `./update-srcinfo.sh`
+4. Test the build: `makepkg -si`
+5. Commit and push changes
+
+## Testing
+
+### Build and Test Locally
 
 ```bash
-source=("${pkgname}-${pkgver}.tar.gz::https://...")
-sha256sums=('SKIP')  # Generate with: makepkg -g
-```
-
-To generate checksums:
-```bash
-makepkg -g
-```
-
-### 4. Choose Build Function
-
-Uncomment and customize the appropriate build function for your project type:
-- **Make/Autotools**: Standard `./configure && make`
-- **CMake**: Modern C/C++ projects
-- **Meson**: Fast build system
-- **Python**: Use `python -m build`
-- **Rust**: Use `cargo build`
-- **Go**: Go applications
-- **Node.js**: npm packages
-
-### 5. Implement Package Function
-
-The `package()` function installs files into `${pkgdir}`:
-
-```bash
-package() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
-
-    # Install binary
-    install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
-
-    # Install license
-    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-
-    # Install documentation
-    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-
-    # Install man page
-    install -Dm644 "${pkgname}.1" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
-}
-```
-
-### 6. Customize .install Script (Optional)
-
-If you need post-install hooks:
-
-1. Rename `package-name.install` to `${pkgname}.install`
-2. Uncomment relevant sections in the script
-3. Ensure PKGBUILD references it: `install="${pkgname}.install"`
-
-## Testing Your Package
-
-### Build Locally
-
-```bash
-# Build the package
-makepkg
-
 # Build and install
 makepkg -si
 
-# Clean build (removes existing src/ and pkg/ directories)
-makepkg -C
-
-# Force rebuild
-makepkg -f
-```
-
-### Test Installation
-
-```bash
-# Install built package
-sudo pacman -U your-package-name-1.0.0-1-x86_64.pkg.tar.zst
-
 # Check installed files
-pacman -Ql your-package-name
+pacman -Ql wisp-calendar
 
-# Remove package
-sudo pacman -R your-package-name
+# Run the application
+wisp-calendar
 ```
 
-### Validate PKGBUILD
+### Validate Package
 
 ```bash
-# Check for common issues
+# Check PKGBUILD for issues
 namcap PKGBUILD
 
 # Check built package
-namcap your-package-name-1.0.0-1-x86_64.pkg.tar.zst
+namcap wisp-calendar-*.pkg.tar.zst
 ```
 
 ## Publishing to AUR
 
-### 1. Generate .SRCINFO
+### First Time Setup
 
 ```bash
-# Use the helper script
+# Generate .SRCINFO
 ./update-srcinfo.sh
 
-# Or manually
-makepkg --printsrcinfo > .SRCINFO
-```
-
-### 2. Set Up AUR Repository
-
-```bash
-# Clone AUR repository (first time)
-git clone ssh://aur@aur.archlinux.org/your-package-name.git aur-repo
+# Clone AUR repository
+git clone ssh://aur@aur.archlinux.org/wisp-calendar.git aur-repo
 cd aur-repo
 
 # Copy files
 cp ../PKGBUILD .
 cp ../.SRCINFO .
-# Copy .install if you have one
-```
+cp ../wisp-calendar.install .
 
-### 3. Commit and Push
-
-```bash
-# Add files
-git add PKGBUILD .SRCINFO
-
-# Commit
-git commit -m "Initial commit: version 1.0.0"
-
-# Push to AUR
+# Commit and push
+git add PKGBUILD .SRCINFO wisp-calendar.install
+git commit -m "Initial commit"
 git push
 ```
 
-### 4. Update Package
-
-When updating the package:
+### Updating on AUR
 
 ```bash
-# Update pkgver in PKGBUILD
-# Reset pkgrel to 1
-# Update checksums: makepkg -g
+# After updating PKGBUILD locally
+./update-srcinfo.sh
 
-# Generate new .SRCINFO
-makepkg --printsrcinfo > .SRCINFO
-
-# Commit and push
-git add PKGBUILD .SRCINFO
+# In the AUR repo
+cd aur-repo
+cp ../PKGBUILD ../.SRCINFO ../wisp-calendar.install .
+git add PKGBUILD .SRCINFO wisp-calendar.install
 git commit -m "Update to version X.Y.Z"
 git push
 ```
 
-## Common PKGBUILD Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `pkgname` | Package name | `mypackage` |
-| `pkgver` | Version number | `1.0.0` |
-| `pkgrel` | Release number | `1` |
-| `epoch` | Force version ordering | `1` |
-| `pkgdesc` | Short description | `"A useful tool"` |
-| `arch` | Architectures | `('x86_64' 'i686')` |
-| `url` | Project homepage | `https://example.com` |
-| `license` | License(s) | `('GPL' 'MIT')` |
-| `depends` | Runtime dependencies | `('glibc' 'openssl')` |
-| `makedepends` | Build dependencies | `('cmake' 'gcc')` |
-| `checkdepends` | Test dependencies | `('pytest')` |
-| `optdepends` | Optional features | `('tool: for X')` |
-| `provides` | Virtual packages | `('editor')` |
-| `conflicts` | Conflicting packages | `('other-package')` |
-| `replaces` | Replaced packages | `('old-package')` |
-| `backup` | Config files to backup | `('etc/mypackage.conf')` |
-| `options` | Build options | `('!strip' 'docs')` |
-| `install` | Install script | `${pkgname}.install` |
-| `source` | Source URLs/files | `("url" "file")` |
-| `sha256sums` | Checksums | `('abc123...')` |
-
-## Build Options
-
-Common options for the `options` array:
-
-- `strip` / `!strip` - Strip binaries/libraries
-- `docs` / `!docs` - Include documentation
-- `libtool` / `!libtool` - Keep libtool files
-- `staticlibs` / `!staticlibs` - Build static libraries
-- `emptydirs` / `!emptydirs` - Keep empty directories
-- `zipman` / `!zipman` - Compress man pages
-- `ccache` / `!ccache` - Use ccache
-- `debug` / `!debug` - Build with debug symbols
-
-## Helpful Commands
+## Useful AUR Commands
 
 ```bash
-# Get package info from AUR
-yay -Si package-name
+# Get package info
+yay -Si wisp-calendar
 
-# Search AUR
-yay -Ss search-term
-
-# Update all AUR packages
-yay -Sua
-
-# Build in clean chroot (recommended for final testing)
-extra-x86_64-build
+# Search for the package
+yay -Ss wisp-calendar
 
 # View PKGBUILD from AUR
-yay -Gp package-name
+yay -Gp wisp-calendar
 ```
 
 ## Resources
@@ -272,9 +165,7 @@ yay -Gp package-name
 - [AUR Submission Guidelines](https://wiki.archlinux.org/title/AUR_submission_guidelines)
 - [PKGBUILD Documentation](https://wiki.archlinux.org/title/PKGBUILD)
 - [Arch Package Guidelines](https://wiki.archlinux.org/title/Arch_package_guidelines)
-- [makepkg Manual](https://man.archlinux.org/man/makepkg.8)
-- [namcap Tool](https://wiki.archlinux.org/title/Namcap)
 
 ## License
 
-This boilerplate is released into the public domain. Use it however you like.
+MIT License - See LICENSE file for details.

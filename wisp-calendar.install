@@ -1,0 +1,34 @@
+#!/bin/bash
+
+post_install() {
+    cat <<'EOF'
+
+    ╔══════════════════════════════════════════════════════════╗
+    ║                                                          ║
+    ║              ✨ Wisp Calendar v0.1.0 ✨                  ║
+    ║                                                          ║
+    ║    A beautiful text-based calendar for Arch Linux        ║
+    ║                                                          ║
+    ╚══════════════════════════════════════════════════════════╝
+
+    📅 Run 'wisp-calendar' to launch
+
+    ⌨️  Controls:
+       • Arrow keys or hjkl - Navigate days
+       • t - Jump to today
+       • q - Quit
+
+    Enjoy your new calendar! 🌙
+
+EOF
+}
+
+post_upgrade() {
+    echo "Wisp Calendar has been upgraded to the latest version! ✨"
+}
+
+post_remove() {
+    echo "Wisp Calendar has been removed. Thanks for using it! 🌙"
+}
+
+# vim:set ts=4 sw=4 et:
