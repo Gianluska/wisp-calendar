@@ -1,0 +1,41 @@
+# Source files downloaded by makepkg
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+*.zip
+*.tgz
+
+# Extracted source directories
+src/
+pkg/
+
+# Built package files
+*.pkg.tar
+*.pkg.tar.gz
+*.pkg.tar.xz
+*.pkg.tar.zst
+
+# Signature files
+*.sig
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# makepkg temp files
+.AURINFO
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
