@@ -19,22 +19,72 @@ setup_hyprland() {
     fi
 }
 
-# Detect terminal colors or use elegant fallback
+# Detect if terminal is using light or dark theme
+is_light_theme() {
+    # Try to detect background brightness using OSC 11 query
+    # This queries the terminal's background color
+    local old_settings=$(stty -g)
+    stty raw -echo min 0 time 1
+
+    # Query background color (OSC 11)
+    printf '\e]11;?\e\\'
+
+    # Read response
+    local response=""
+    IFS= read -r -d '\' response 2>/dev/null
+
+    stty "$old_settings"
+
+    # Parse RGB values from response (format: rgb:RRRR/GGGG/BBBB)
+    if [[ $response =~ rgb:([0-9a-fA-F]+)/([0-9a-fA-F]+)/([0-9a-fA-F]+) ]]; then
+        # Convert hex to decimal (take first 2 chars of each component)
+        local r=$((16#${BASH_REMATCH[1]:0:2}))
+        local g=$((16#${BASH_REMATCH[2]:0:2}))
+        local b=$((16#${BASH_REMATCH[3]:0:2}))
+
+        # Calculate perceived brightness (using standard luminance formula)
+        local brightness=$(( (r * 299 + g * 587 + b * 114) / 1000 ))
+
+        # If brightness > 128, it's a light theme
+        [ $brightness -gt 128 ] && return 0
+    fi
+
+    # Fallback: check common environment variables
+    if [[ "${GTK_THEME,,}" == *"light"* ]] || [[ "${COLOR_SCHEME,,}" == *"light"* ]]; then
+        return 0
+    fi
+
+    # Default to dark theme if detection fails
+    return 1
+}
+
+# Detect terminal colors and apply appropriate theme
 detect_colors() {
-    # Try to detect background brightness
-    # Fallback to warm pastel monochrome palette
+    if is_light_theme; then
+        # Light theme - dark colors for good contrast
+        COLORS[BASE]='\033[38;5;235m'           # Very dark warm gray
+        COLORS[BASE_DIM]='\033[38;5;240m'       # Dark warm gray
+        COLORS[BASE_DIMMER]='\033[38;5;245m'    # Medium gray
+        COLORS[ACCENT]='\033[38;5;233m'         # Almost black
+        COLORS[ACCENT_BRIGHT]='\033[38;5;232m'  # Deep black
+        COLORS[SUBTLE]='\033[38;5;248m'         # Subtle gray
 
-    # Warm pastel monochrome - elegant and minimalist with better contrast
-    COLORS[BASE]='\033[38;5;253m'           # Very light warm gray
-    COLORS[BASE_DIM]='\033[38;5;250m'       # Light warm gray
-    COLORS[BASE_DIMMER]='\033[38;5;245m'    # Medium warm gray
-    COLORS[ACCENT]='\033[38;5;254m'         # Almost white
-    COLORS[ACCENT_BRIGHT]='\033[38;5;255m'  # Pure white
-    COLORS[SUBTLE]='\033[38;5;242m'         # Subtle gray with better contrast
+        # Today/selected highlights - dark and visible
+        COLORS[HIGHLIGHT]='\033[38;5;232m'      # Deep black
+        COLORS[HIGHLIGHT_BG]='\033[48;5;250m'   # Light background
+    else
+        # Dark theme - light colors for good contrast (original)
+        COLORS[BASE]='\033[38;5;253m'           # Very light warm gray
+        COLORS[BASE_DIM]='\033[38;5;250m'       # Light warm gray
+        COLORS[BASE_DIMMER]='\033[38;5;245m'    # Medium warm gray
+        COLORS[ACCENT]='\033[38;5;254m'         # Almost white
+        COLORS[ACCENT_BRIGHT]='\033[38;5;255m'  # Pure white
+        COLORS[SUBTLE]='\033[38;5;242m'         # Subtle gray with better contrast
 
-    # Today/selected highlights - subtle but present
-    COLORS[HIGHLIGHT]='\033[38;5;255m'      # Pure white
-    COLORS[HIGHLIGHT_BG]='\033[48;5;236m'   # Subtle dark background
+        # Today/selected highlights - subtle but present
+        COLORS[HIGHLIGHT]='\033[38;5;255m'      # Pure white
+        COLORS[HIGHLIGHT_BG]='\033[48;5;236m'   # Subtle dark background
+    fi
 }
 
 # Color palette
