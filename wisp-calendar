@@ -1,62 +1,61 @@
 #!/bin/bash
 
-# Wisp Calendar - A beautiful terminal calendar
-# Inspired by calcurse with enhanced visual aesthetics
+# Wisp Calendar - Minimalist aesthetic calendar
+# Ultra-clean design with pastel monochromatic palette
 
-# Color definitions (ANSI escape codes)
+# Detect terminal colors or use elegant fallback
+detect_colors() {
+    # Try to detect background brightness
+    # Fallback to warm pastel monochrome palette
+
+    # Warm pastel monochrome - elegant and minimalist with better contrast
+    COLORS[BASE]='\033[38;5;253m'           # Very light warm gray
+    COLORS[BASE_DIM]='\033[38;5;250m'       # Light warm gray
+    COLORS[BASE_DIMMER]='\033[38;5;245m'    # Medium warm gray
+    COLORS[ACCENT]='\033[38;5;254m'         # Almost white
+    COLORS[ACCENT_BRIGHT]='\033[38;5;255m'  # Pure white
+    COLORS[SUBTLE]='\033[38;5;242m'         # Subtle gray with better contrast
+
+    # Today/selected highlights - subtle but present
+    COLORS[HIGHLIGHT]='\033[38;5;255m'      # Pure white
+    COLORS[HIGHLIGHT_BG]='\033[48;5;236m'   # Subtle dark background
+}
+
+# Color palette
 declare -A COLORS=(
     [RESET]='\033[0m'
     [BOLD]='\033[1m'
     [DIM]='\033[2m'
-
-    # Main palette - cyberpunk/neon aesthetic
-    [PRIMARY]='\033[38;5;147m'      # Lavender
-    [SECONDARY]='\033[38;5;183m'    # Light purple
-    [ACCENT]='\033[38;5;219m'       # Pink
-    [HIGHLIGHT]='\033[38;5;213m'    # Bright pink
-
-    # Background colors
-    [BG_SELECTED]='\033[48;5;60m'   # Purple background
-    [BG_TODAY]='\033[48;5;53m'      # Darker purple
-
-    # Text colors
-    [TEXT_HEADER]='\033[38;5;183m'  # Light purple
-    [TEXT_DAY]='\033[38;5;147m'     # Lavender
-    [TEXT_WEEKEND]='\033[38;5;213m' # Pink for weekends
-    [TEXT_DIM]='\033[38;5;240m'     # Gray for other month days
-    [TEXT_TODAY]='\033[1;38;5;231m' # Bright white
+    [ITALIC]='\033[3m'
 )
 
-# Box drawing characters
-declare -A BOX=(
-    # Double line borders for outer frame
-    [TL]='╔'  # Top left
-    [TR]='╗'  # Top right
-    [BL]='╚'  # Bottom left
-    [BR]='╝'  # Bottom right
-    [H]='═'   # Horizontal
-    [V]='║'   # Vertical
+# Detect and set colors
+detect_colors
 
-    # Single line for inner separators
+# Minimalist characters
+declare -A CHAR=(
+    # Elegant borders
     [h]='─'
     [v]='│'
-    [tl]='┌'
-    [tr]='┐'
-    [bl]='└'
-    [br]='┘'
-    [cross]='┼'
-    [t_down]='┬'
-    [t_up]='┴'
-    [t_right]='├'
-    [t_left]='┤'
+    [tl]='╭'
+    [tr]='╮'
+    [bl]='╰'
+    [br]='╯'
+    [h_heavy]='━'
+    [v_light]='┆'
 
-    # Special
-    [dot]='•'
-    [circle]='◉'
-    [star]='★'
+    # Visual indicators
+    [dot]='·'
+    [circle]='○'
+    [filled_circle]='●'
+    [bar]='▏'
+    [marker]='┃'
+    [diamond]='◆'
+    [square]='▪'
+    [bullet]='•'
 )
 
-# Global variables
+# Global state
 CURRENT_MONTH=$(date +%m)
 CURRENT_YEAR=$(date +%Y)
 TODAY_DAY=$(date +%d)
@@ -64,244 +63,262 @@ SELECTED_DAY=$TODAY_DAY
 
 # Terminal setup
 setup_terminal() {
-    # Hide cursor, enable alternative screen buffer
     tput civis
     tput smcup
     clear
-
-    # Enable raw mode for arrow key detection
     stty -echo
 }
 
+# Minimalist splash
+show_splash() {
+    tput civis
+    clear
+
+    local color="${COLORS[BASE]}"
+    local term_height=$(tput lines)
+    local term_width=$(tput cols)
+
+    local -a logo=(
+        ' _           _    '
+        '| |         | |   '
+        '| |_   _____| | __'
+        '| \ \ / / __| |/ /'
+        '| |\ V /\__ \   < '
+        '|_| \_/ |___/_|\_\'
+        '                  '
+    )
+
+    local logo_height=7
+    local top_padding=$(( (term_height - logo_height) / 2 ))
+
+    for ((i=0; i<top_padding; i++)); do
+        echo ""
+    done
+
+    for line in "${logo[@]}"; do
+        local line_len=${#line}
+        local left_padding=$(( (term_width - line_len) / 2 ))
+        printf "%*s" "$left_padding" ""
+        printf "${color}${COLORS[DIM]}%s${COLORS[RESET]}\n" "$line"
+    done
+
+    sleep 1
+}
+
 cleanup_terminal() {
-    # Restore cursor, disable alternative screen buffer
     tput cnorm
     tput rmcup
     stty echo
     clear
 }
 
-# Trap EXIT to cleanup
 trap cleanup_terminal EXIT INT TERM
 
-# Get number of days in a month
+# Utility functions
 days_in_month() {
     local month=$1
     local year=$2
     date -d "${year}-${month}-01 + 1 month - 1 day" +%d
 }
 
-# Get day of week for first day of month (0=Sunday, 1=Monday, etc.)
-first_day_of_month() {
-    local month=$1
-    local year=$2
-    date -d "${year}-${month}-01" +%u
-    # We want Monday=0, so we adjust
-}
-
-# Get month name
 get_month_name() {
     local month=$1
     local year=$2
     date -d "${year}-${month}-01" +%B
 }
 
-# Draw the gorgeous header
+# Elegant header with visual frame
 draw_header() {
     local month_name=$(get_month_name $CURRENT_MONTH $CURRENT_YEAR)
-    local title=" $month_name $CURRENT_YEAR "
-    local width=62
+    local title="$month_name $CURRENT_YEAR"
 
-    echo -e "${COLORS[PRIMARY]}"
+    echo ""
+    echo ""
 
-    # Top border with decorative elements
-    echo -ne "    ${BOX[TL]}"
-    for ((i=0; i<width; i++)); do echo -ne "${BOX[H]}"; done
-    echo -e "${BOX[TR]}"
+    local term_width=$(tput cols)
+    local frame_width=52  # Match calendar grid width
+    local left_padding=$(( (term_width - frame_width) / 2 ))
 
-    # Navigation line with Back/Next buttons
-    local nav_left=" ${COLORS[ACCENT]}←${COLORS[RESET]}${COLORS[PRIMARY]} Back "
-    local nav_right=" Next ${COLORS[ACCENT]}→${COLORS[RESET]}${COLORS[PRIMARY]} "
-    local nav_left_len=8  # Visual length (← Back + spaces)
-    local nav_right_len=8  # Visual length (Next → + spaces)
+    # Top border
+    printf "%*s" "$left_padding" ""
+    printf "${COLORS[SUBTLE]}${CHAR[tl]}"
+    for ((i=0; i<frame_width-2; i++)); do
+        printf "${CHAR[h]}"
+    done
+    printf "${CHAR[tr]}${COLORS[RESET]}\n"
 
+    # Title line
     local title_len=${#title}
-    local available_space=$((width - nav_left_len - nav_right_len))
-    local title_padding=$(( (available_space - title_len) / 2 ))
+    local inner_width=$((frame_width - 2))
+    local title_padding=$(( (inner_width - title_len) / 2 ))
 
-    echo -ne "    ${BOX[V]}"
-    echo -ne "$nav_left"
-    for ((i=0; i<title_padding; i++)); do echo -n " "; done
-    echo -ne "${COLORS[BOLD]}${COLORS[HIGHLIGHT]}$title${COLORS[RESET]}${COLORS[PRIMARY]}"
-    for ((i=0; i<available_space-title_padding-title_len; i++)); do echo -n " "; done
-    echo -ne "$nav_right"
-    echo -e "${BOX[V]}"
+    printf "%*s" "$left_padding" ""
+    printf "${COLORS[SUBTLE]}${CHAR[v]}${COLORS[RESET]}"
+    printf "%*s" "$title_padding" ""
+    printf "${COLORS[ACCENT_BRIGHT]}${COLORS[BOLD]}%s${COLORS[RESET]}" "$title"
+    printf "%*s" "$((inner_width - title_len - title_padding))" ""
+    printf "${COLORS[SUBTLE]}${CHAR[v]}${COLORS[RESET]}\n"
 
-    # Separator with decorative elements
-    echo -ne "    ${BOX[V]}"
-    for ((i=0; i<width; i++)); do echo -ne "${BOX[h]}"; done
-    echo -e "${BOX[V]}"
+    # Bottom border
+    printf "%*s" "$left_padding" ""
+    printf "${COLORS[SUBTLE]}${CHAR[bl]}"
+    for ((i=0; i<frame_width-2; i++)); do
+        printf "${CHAR[h]}"
+    done
+    printf "${CHAR[br]}${COLORS[RESET]}\n"
 
-    echo -e "${COLORS[RESET]}"
+    echo ""
 }
 
-# Draw day headers (Mon, Tue, Wed, etc.)
+# Elegant day headers with separators
 draw_day_headers() {
-    local days=("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
+    local days=("mo" "tu" "we" "th" "fr" "sa" "su")
 
-    echo -ne "    ${COLORS[PRIMARY]}${BOX[V]}  "
+    local term_width=$(tput cols)
+    local grid_width=32  # 7 days * 2 chars + 6 spaces * 3 chars = 32
+    local left_padding=$(( (term_width - grid_width) / 2 ))
 
+    # Day names
+    printf "%*s" "$left_padding" ""
     for i in {0..6}; do
         if [ $i -ge 5 ]; then
-            # Weekend colors
-            echo -ne "${COLORS[TEXT_WEEKEND]}${COLORS[BOLD]}"
+            # Weekend - slightly dimmed
+            printf "${COLORS[BASE_DIMMER]}${COLORS[BOLD]}%s${COLORS[RESET]}" "${days[$i]}"
         else
-            echo -ne "${COLORS[TEXT_HEADER]}${COLORS[BOLD]}"
+            # Weekday
+            printf "${COLORS[BASE]}${COLORS[BOLD]}%s${COLORS[RESET]}" "${days[$i]}"
         fi
-
-        echo -ne "${days[$i]}"
-        echo -ne "${COLORS[RESET]}${COLORS[PRIMARY]}"
 
         if [ $i -lt 6 ]; then
-            echo -ne "     "
-        else
-            # Last column needs extra spaces to complete 62 chars
-            echo -ne "       "
+            printf "   "
         fi
     done
+    echo ""
 
-    echo -e "  ${BOX[V]}${COLORS[RESET]}"
-
-    # Separator
-    echo -ne "    ${COLORS[PRIMARY]}${BOX[V]}"
-    for ((i=0; i<62; i++)); do echo -ne "${BOX[h]}"; done
-    echo -e "${BOX[V]}${COLORS[RESET]}"
+    # Subtle separator
+    printf "%*s" "$left_padding" ""
+    for i in {0..6}; do
+        printf "${COLORS[SUBTLE]}${COLORS[DIM]}${CHAR[h]}${CHAR[h]}${COLORS[RESET]}"
+        if [ $i -lt 6 ]; then
+            printf "   "
+        fi
+    done
+    echo ""
+    echo ""
 }
 
-# Draw calendar grid
+# Visual calendar grid with elegant indicators
 draw_calendar() {
     local days=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
     local first_day=$(date -d "${CURRENT_YEAR}-${CURRENT_MONTH}-01" +%u)
-    # first_day: 1=Monday, 2=Tuesday, ..., 7=Sunday
 
     local day_num=1
-    local finished=0
+    local term_width=$(tput cols)
+    local grid_width=32  # Match day headers: 7*2 + 6*3 = 32
+    local left_padding=$(( (term_width - grid_width) / 2 ))
 
     # Draw up to 6 weeks
     for ((week=0; week<6; week++)); do
-        echo -ne "    ${COLORS[PRIMARY]}${BOX[V]}  "
+        [ $day_num -gt $days ] && break
 
-        # Draw 7 days (Monday to Sunday)
+        printf "%*s" "$left_padding" ""
+
+        # Draw 7 days
         for ((dow=1; dow<=7; dow++)); do
             local should_draw=0
 
-            # First week: only draw if we've reached the first day
             if [ $week -eq 0 ]; then
-                if [ $dow -ge $first_day ]; then
-                    should_draw=1
-                fi
+                [ $dow -ge $first_day ] && should_draw=1
             else
-                # Subsequent weeks: draw if we haven't exceeded total days
                 should_draw=1
             fi
 
             if [ $should_draw -eq 1 ] && [ $day_num -le $days ]; then
-                # Valid day in current month
                 local is_today=0
                 local is_selected=0
 
-                if [ $day_num -eq $TODAY_DAY ] && [ $CURRENT_MONTH -eq $(date +%m) ] && [ $CURRENT_YEAR -eq $(date +%Y) ]; then
-                    is_today=1
-                fi
+                [ $day_num -eq $TODAY_DAY ] && [ $CURRENT_MONTH -eq $(date +%m) ] && [ $CURRENT_YEAR -eq $(date +%Y) ] && is_today=1
+                [ $day_num -eq $SELECTED_DAY ] && is_selected=1
 
-                if [ $day_num -eq $SELECTED_DAY ]; then
-                    is_selected=1
-                fi
-
-                # Draw the day with appropriate styling
+                # Render day with striking visual styling - each cell is 5 chars (2 digit + 1 marker + 2 space) except last
                 if [ $is_selected -eq 1 ]; then
-                    # Selected day - bright background
-                    echo -ne "${COLORS[BG_SELECTED]}${COLORS[BOLD]}${COLORS[TEXT_TODAY]}"
-                    printf " %2d  " "$day_num"
-                    echo -ne "${COLORS[RESET]}${COLORS[PRIMARY]}"
+                    # Selected - bold with diamond marker
+                    printf "${COLORS[HIGHLIGHT]}${COLORS[BOLD]}%2d${COLORS[RESET]}${COLORS[ACCENT]}${CHAR[diamond]}${COLORS[RESET]}" "$day_num"
                 elif [ $is_today -eq 1 ]; then
-                    # Today - special highlight
-                    echo -ne "${COLORS[BG_TODAY]}${COLORS[TEXT_TODAY]}"
-                    printf " %2d  " "$day_num"
-                    echo -ne "${COLORS[RESET]}${COLORS[PRIMARY]}"
+                    # Today - highlighted with circle
+                    printf "${COLORS[ACCENT_BRIGHT]}${COLORS[BOLD]}%2d${COLORS[RESET]}${COLORS[BASE]}${CHAR[circle]}${COLORS[RESET]}" "$day_num"
                 else
                     # Regular day
                     if [ $dow -ge 6 ]; then
-                        # Weekend
-                        echo -ne "${COLORS[TEXT_WEEKEND]}"
+                        # Weekend - dimmed with subtle marker
+                        printf "${COLORS[BASE_DIMMER]}%2d${COLORS[RESET]}${COLORS[SUBTLE]}${CHAR[dot]}${COLORS[RESET]}" "$day_num"
                     else
                         # Weekday
-                        echo -ne "${COLORS[TEXT_DAY]}"
+                        printf "${COLORS[BASE]}%2d${COLORS[RESET]} ${COLORS[RESET]}" "$day_num"
                     fi
-                    printf " %2d  " "$day_num"
-                    echo -ne "${COLORS[RESET]}${COLORS[PRIMARY]}"
                 fi
 
                 day_num=$((day_num + 1))
             else
-                # Empty cell
-                echo -ne "${COLORS[TEXT_DIM]}     ${COLORS[PRIMARY]}"
+                # Empty cell with subtle indicator - 3 chars to match
+                printf "${COLORS[SUBTLE]}${COLORS[DIM]}  ${CHAR[dot]}${COLORS[RESET]}"
             fi
 
-            if [ $dow -lt 7 ]; then
-                echo -ne "   "
-            else
-                # Last column needs extra spaces to complete 62 chars
-                echo -ne "     "
-            fi
+            # Spacing between columns - 2 spaces to make each cell 5 chars total (except last)
+            [ $dow -lt 7 ] && printf "  "
         done
 
-        echo -e "  ${BOX[V]}${COLORS[RESET]}"
+        echo ""
 
-        # Check if we're done
-        if [ $day_num -gt $days ]; then
-            finished=1
-            break
+        # Subtle week separator
+        if [ $week -lt 5 ] && [ $day_num -le $days ]; then
+            printf "%*s" "$left_padding" ""
+            printf "${COLORS[SUBTLE]}${COLORS[DIM]}%*s${COLORS[RESET]}\n" "$grid_width" ""
         fi
-
-        # Draw separator between weeks (not after last row)
-        echo -ne "    ${COLORS[PRIMARY]}${BOX[V]}"
-        for ((i=0; i<62; i++)); do echo -ne "${BOX[h]}"; done
-        echo -e "${BOX[V]}${COLORS[RESET]}"
     done
 }
 
-# Draw footer
+# Elegant footer with visual elements
 draw_footer() {
-    local width=62
-
-    echo -e "${COLORS[PRIMARY]}"
-
-    # Bottom border
-    echo -ne "    ${BOX[BL]}"
-    for ((i=0; i<width; i++)); do echo -ne "${BOX[H]}"; done
-    echo -e "${BOX[BR]}"
-
-    echo -e "${COLORS[RESET]}"
-
-    # Help text
     echo ""
-    echo -e "    ${COLORS[DIM]}${COLORS[TEXT_DAY]}${BOX[dot]} Arrows: navigate ${BOX[dot]} [/]: change month ${BOX[dot]} t: today ${BOX[dot]} q: quit${COLORS[RESET]}"
+    echo ""
+
+    local term_width=$(tput cols)
+    local frame_width=52  # Match calendar grid width
+    local left_padding=$(( (term_width - frame_width) - 16 ))
+
+    # Top separator
+    printf "%*s" "$left_padding" ""
+    for ((i=0; i<frame_width; i++)); do
+        printf "${COLORS[SUBTLE]}${COLORS[DIM]}${CHAR[h]}${COLORS[RESET]}"
+    done
+    echo ""
+    echo ""
+
+    # Controls line - compact to fit 32 chars
+    printf "%*s      " "$left_padding" ""
+    printf "${COLORS[BASE_DIM]}hjkl${COLORS[RESET]} ${COLORS[SUBTLE]}${CHAR[bullet]}${COLORS[RESET]} ${COLORS[BASE]}nav${COLORS[RESET]}"
+    printf "  "
+    printf "${COLORS[BASE_DIM]}[]${COLORS[RESET]} ${COLORS[SUBTLE]}${CHAR[bullet]}${COLORS[RESET]} ${COLORS[BASE]}month${COLORS[RESET]}"
+    printf "  "
+    printf "${COLORS[BASE_DIM]}t${COLORS[RESET]}${COLORS[SUBTLE]}${CHAR[bullet]}${COLORS[RESET]}${COLORS[BASE]}today${COLORS[RESET]}"
+    printf "  "
+    printf "${COLORS[BASE_DIM]}q${COLORS[RESET]}${COLORS[SUBTLE]}${CHAR[bullet]}${COLORS[RESET]}${COLORS[BASE]}quit${COLORS[RESET]}"
+    echo ""
+
     echo ""
 }
 
-# Main render function
+# Main render
 render() {
     clear
-    echo ""
-    echo ""
     draw_header
     draw_day_headers
     draw_calendar
     draw_footer
 }
 
-# Navigate to previous month
+# Navigation
 prev_month() {
     CURRENT_MONTH=$((CURRENT_MONTH - 1))
     if [ $CURRENT_MONTH -lt 1 ]; then
@@ -309,14 +326,10 @@ prev_month() {
         CURRENT_YEAR=$((CURRENT_YEAR - 1))
     fi
 
-    # Adjust selected day if it exceeds the new month's days
     local max_days=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
-    if [ $SELECTED_DAY -gt $max_days ]; then
-        SELECTED_DAY=$max_days
-    fi
+    [ $SELECTED_DAY -gt $max_days ] && SELECTED_DAY=$max_days
 }
 
-# Navigate to next month
 next_month() {
     CURRENT_MONTH=$((CURRENT_MONTH + 1))
     if [ $CURRENT_MONTH -gt 12 ]; then
@@ -324,91 +337,56 @@ next_month() {
         CURRENT_YEAR=$((CURRENT_YEAR + 1))
     fi
 
-    # Adjust selected day if it exceeds the new month's days
     local max_days=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
-    if [ $SELECTED_DAY -gt $max_days ]; then
-        SELECTED_DAY=$max_days
-    fi
+    [ $SELECTED_DAY -gt $max_days ] && SELECTED_DAY=$max_days
 }
 
-# Handle keyboard input
+# Input handling
 handle_input() {
     local key
-
-    # Read a single character
     IFS= read -rsn1 key
 
-    # Check for escape sequences (arrow keys)
     if [[ $key == $'\x1b' ]]; then
         read -rsn2 key
         case $key in
-            '[A') # Up arrow
-                SELECTED_DAY=$(( SELECTED_DAY - 7 ))
-                ;;
-            '[B') # Down arrow
-                SELECTED_DAY=$(( SELECTED_DAY + 7 ))
-                ;;
-            '[C') # Right arrow
-                SELECTED_DAY=$(( SELECTED_DAY + 1 ))
-                ;;
-            '[D') # Left arrow
-                SELECTED_DAY=$(( SELECTED_DAY - 1 ))
-                ;;
+            '[A') SELECTED_DAY=$(( SELECTED_DAY - 7 )) ;;
+            '[B') SELECTED_DAY=$(( SELECTED_DAY + 7 )) ;;
+            '[C') SELECTED_DAY=$(( SELECTED_DAY + 1 )) ;;
+            '[D') SELECTED_DAY=$(( SELECTED_DAY - 1 )) ;;
         esac
     else
         case $key in
-            'q'|'Q')
-                exit 0
-                ;;
+            'q'|'Q') exit 0 ;;
             't'|'T')
-                # Jump to today
                 CURRENT_MONTH=$(date +%m)
                 CURRENT_YEAR=$(date +%Y)
                 SELECTED_DAY=$(date +%d)
                 ;;
-            '[')
-                # Previous month
-                prev_month
-                return
-                ;;
-            ']')
-                # Next month
-                next_month
-                return
-                ;;
-            'h')
-                SELECTED_DAY=$(( SELECTED_DAY - 1 ))
-                ;;
-            'l')
-                SELECTED_DAY=$(( SELECTED_DAY + 1 ))
-                ;;
-            'k')
-                SELECTED_DAY=$(( SELECTED_DAY - 7 ))
-                ;;
-            'j')
-                SELECTED_DAY=$(( SELECTED_DAY + 7 ))
-                ;;
+            '[') prev_month; return ;;
+            ']') next_month; return ;;
+            'h') SELECTED_DAY=$(( SELECTED_DAY - 1 )) ;;
+            'l') SELECTED_DAY=$(( SELECTED_DAY + 1 )) ;;
+            'k') SELECTED_DAY=$(( SELECTED_DAY - 7 )) ;;
+            'j') SELECTED_DAY=$(( SELECTED_DAY + 7 )) ;;
         esac
     fi
 
-    # Handle month overflow when navigating days
+    # Handle month overflow
     local max_days=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
 
     if [ $SELECTED_DAY -lt 1 ]; then
-        # Go to previous month
         prev_month
-        local prev_max=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
-        SELECTED_DAY=$prev_max
+        SELECTED_DAY=$(days_in_month $CURRENT_MONTH $CURRENT_YEAR)
     elif [ $SELECTED_DAY -gt $max_days ]; then
-        # Go to next month
         next_month
         SELECTED_DAY=1
     fi
 }
 
-# Main program loop
+# Main loop
 main() {
     setup_terminal
+    show_splash
 
     while true; do
         render
@@ -416,5 +394,4 @@ main() {
     done
 }
 
-# Run the calendar
 main
