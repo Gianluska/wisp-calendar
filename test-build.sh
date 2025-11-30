@@ -9,21 +9,26 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}=== AUR Build Test ===${NC}\n"
+echo -e "${YELLOW}=== AUR Build Test (Local) ===${NC}\n"
 
-# Check if PKGBUILD exists
-if [ ! -f "PKGBUILD" ]; then
-    echo -e "${RED}✗ PKGBUILD not found!${NC}"
-    echo "Tip: Use PKGBUILD.example as a base for testing:"
-    echo "  cp PKGBUILD.example PKGBUILD"
+# Check if PKGBUILD.local exists
+if [ ! -f "PKGBUILD.local" ]; then
+    echo -e "${RED}✗ PKGBUILD.local not found!${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}✓ PKGBUILD found${NC}\n"
+# Check if wisp-calendar executable exists
+if [ ! -f "wisp-calendar" ]; then
+    echo -e "${RED}✗ wisp-calendar executable not found!${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ PKGBUILD.local found${NC}"
+echo -e "${GREEN}✓ wisp-calendar executable found${NC}\n"
 
 # Show package information
 echo -e "${YELLOW}Package information:${NC}"
-source PKGBUILD
+source PKGBUILD.local
 echo "  Name: ${pkgname}"
 echo "  Version: ${pkgver}-${pkgrel}"
 echo "  Description: ${pkgdesc}"
@@ -46,7 +51,7 @@ rm -rf src/ pkg/ *.pkg.tar.zst
 
 echo -e "\n${YELLOW}1. Validating PKGBUILD with namcap...${NC}"
 if command -v namcap &> /dev/null; then
-    if namcap PKGBUILD; then
+    if namcap PKGBUILD.local; then
         echo -e "${GREEN}✓ namcap validation passed!${NC}"
     else
         echo -e "${YELLOW}⚠ Warnings found (check above)${NC}"
@@ -56,7 +61,7 @@ else
 fi
 
 echo -e "\n${YELLOW}2. Building the package...${NC}"
-if makepkg -f; then
+if makepkg -f -p PKGBUILD.local; then
     echo -e "${GREEN}✓ Build completed successfully!${NC}"
 else
     echo -e "${RED}✗ Build failed!${NC}"
