@@ -8,18 +8,25 @@
 #   - Clean component-based UI rendering
 #   - Clear separation between data, presentation, and logic
 
-# Get the directory where this script is located
+# Determine source directory (local development vs installed package)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -d "${SCRIPT_DIR}/src" ]; then
+    # Running from development directory
+    SRC_DIR="${SCRIPT_DIR}/src"
+else
+    # Running from installed package
+    SRC_DIR="/usr/share/lvsk-calendar/src"
+fi
 
 # Source all modules in dependency order
-source "${SCRIPT_DIR}/src/config.sh"
-source "${SCRIPT_DIR}/src/utils.sh"
-source "${SCRIPT_DIR}/src/ui/background.sh"
-source "${SCRIPT_DIR}/src/ui/header.sh"
-source "${SCRIPT_DIR}/src/ui/calendar.sh"
-source "${SCRIPT_DIR}/src/ui/footer.sh"
-source "${SCRIPT_DIR}/src/navigation.sh"
-source "${SCRIPT_DIR}/src/input.sh"
+source "${SRC_DIR}/config.sh"
+source "${SRC_DIR}/utils.sh"
+source "${SRC_DIR}/ui/background.sh"
+source "${SRC_DIR}/ui/header.sh"
+source "${SRC_DIR}/ui/calendar.sh"
+source "${SRC_DIR}/ui/footer.sh"
+source "${SRC_DIR}/navigation.sh"
+source "${SRC_DIR}/input.sh"
 
 # Setup cleanup trap
 trap cleanup_terminal EXIT INT TERM

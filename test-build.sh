@@ -23,8 +23,15 @@ if [ ! -f "lvsk-calendar" ]; then
     exit 1
 fi
 
+# Check if src directory exists
+if [ ! -d "src" ]; then
+    echo -e "${RED}✗ src/ directory not found!${NC}"
+    exit 1
+fi
+
 echo -e "${GREEN}✓ PKGBUILD.local found${NC}"
-echo -e "${GREEN}✓ lvsk-calendar executable found${NC}\n"
+echo -e "${GREEN}✓ lvsk-calendar executable found${NC}"
+echo -e "${GREEN}✓ src/ directory found${NC}\n"
 
 # Show package information
 echo -e "${YELLOW}Package information:${NC}"
@@ -45,7 +52,8 @@ fi
 
 # Clean previous builds
 echo -e "\n${YELLOW}Cleaning previous builds...${NC}"
-rm -rf src/ pkg/ *.pkg.tar.zst
+# Note: We don't delete src/ anymore as it contains our source modules
+rm -rf pkg/ *.pkg.tar.zst
 
 # Run tests
 

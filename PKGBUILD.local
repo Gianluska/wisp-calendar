@@ -1,20 +1,20 @@
-# Maintainer: Your Name <your.email@example.com>
+# Maintainer: Gianlucca Claudino <gianluccaclaudino@gmail.com>
 # Local build version for testing
 
-pkgname=wisp-calendar
-pkgver=0.2.3
+pkgname=lvsk-calendar
+pkgver=0.2.8
 pkgrel=1
 pkgdesc="A beautiful text-based calendar with visual aesthetics for Arch Linux"
 arch=('any')
-url="https://github.com/Gianluska/wisp-calendar"
+url="https://github.com/Gianluska/lvsk-calendar"
 license=('MIT')
 depends=('bash' 'coreutils')
 makedepends=()
 install="${pkgname}.install"
 
-# For local testing, use the local files
-source=("wisp-calendar")
-sha256sums=('SKIP')
+# For local testing, the source files are in the current directory
+source=()
+sha256sums=()
 
 prepare() {
     # Source files are already present
@@ -27,8 +27,23 @@ build() {
 }
 
 package() {
-    # Install the executable
-    install -Dm755 "${srcdir}/wisp-calendar" "${pkgdir}/usr/bin/wisp-calendar"
+    # For local builds, files are in the build directory (startdir)
+    cd "${startdir}"
+
+    # Install the main executable
+    install -Dm755 "lvsk-calendar" "${pkgdir}/usr/bin/lvsk-calendar"
+
+    # Install the modular source files
+    install -Dm644 "src/config.sh" "${pkgdir}/usr/share/${pkgname}/src/config.sh"
+    install -Dm644 "src/utils.sh" "${pkgdir}/usr/share/${pkgname}/src/utils.sh"
+    install -Dm644 "src/navigation.sh" "${pkgdir}/usr/share/${pkgname}/src/navigation.sh"
+    install -Dm644 "src/input.sh" "${pkgdir}/usr/share/${pkgname}/src/input.sh"
+
+    # Install UI components
+    install -Dm644 "src/ui/background.sh" "${pkgdir}/usr/share/${pkgname}/src/ui/background.sh"
+    install -Dm644 "src/ui/header.sh" "${pkgdir}/usr/share/${pkgname}/src/ui/header.sh"
+    install -Dm644 "src/ui/calendar.sh" "${pkgdir}/usr/share/${pkgname}/src/ui/calendar.sh"
+    install -Dm644 "src/ui/footer.sh" "${pkgdir}/usr/share/${pkgname}/src/ui/footer.sh"
 }
 
 # vim:set ts=4 sw=4 et:
