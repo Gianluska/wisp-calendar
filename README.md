@@ -83,11 +83,19 @@ makepkg -si
 
 ## Usage
 
-Launch the application:
+### Launch Methods
 
+**Option 1: Direct launch (inside existing terminal)**
 ```bash
 lvsk-calendar
 ```
+Opens the calendar in your current terminal window.
+
+**Option 2: Launcher (recommended for Hyprland)**
+```bash
+lvsk-calendar-launcher
+```
+Opens a new floating terminal window with the calendar automatically configured. No Hyprland configuration needed!
 
 ### Keyboard Controls
 
@@ -102,12 +110,23 @@ lvsk-calendar
 
 ### Hyprland
 
-When running in Hyprland, the application automatically:
-- Enables floating mode for the calendar window
-- Centers the window on screen
-- Sets optimal dimensions (600x500 pixels)
+The launcher (`lvsk-calendar-launcher`) provides seamless Hyprland integration:
+- **Instantly opens** a new floating terminal window (no transition animations!)
+- **Auto-configures** window rules dynamically (no manual config needed)
+- **Centers** the window on screen
+- **Sets optimal dimensions** (600x500 pixels)
 
-No additional configuration required.
+The launcher works by:
+1. Dynamically adding temporary windowrules via `hyprctl`
+2. Opening a new terminal with a specific title
+3. The rules are applied **before** the window appears (smooth, instant floating!)
+
+**Recommended keybind** (~/.config/hypr/hyprland.conf):
+```conf
+bind = $mainMod, C, exec, lvsk-calendar-launcher
+```
+
+No permanent Hyprland configuration required - everything is handled automatically!
 
 ### Waybar
 
@@ -126,7 +145,7 @@ Add a custom calendar module to your Waybar configuration:
 
   "custom/calendar": {
     "format": "󰃭 ",
-    "on-click": "ghostty -e lvsk-calendar",
+    "on-click": "lvsk-calendar-launcher",
     "tooltip-format": "Click to open calendar"
   }
 }

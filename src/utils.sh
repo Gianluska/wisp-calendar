@@ -43,15 +43,9 @@ cleanup_terminal() {
 setup_hyprland() {
     # Check if running in Hyprland
     if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
-        # Get the current window address
-        local window_address=$(hyprctl activewindow -j | grep -oP '"address": "\K[^"]+' | head -1)
-
-        if [ -n "$window_address" ]; then
-            # Make window float and center it with optimal size
-            hyprctl dispatch togglefloating "address:$window_address" 2>/dev/null
-            hyprctl dispatch resizewindowpixel "exact 600 500,address:$window_address" 2>/dev/null
-            hyprctl dispatch centerwindow 2>/dev/null
-        fi
+        # Window should already be floating via windowrules
+        # Just ensure proper positioning
+        sleep 0.1  # Small delay to ensure windowrules are applied
     fi
 }
 
